@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lista do Mercado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+
+    <header class="header">
+      <div class="header-top">
+        <h1>🛒 Lista do Mercado</h1>
+        <div class="header-acoes">
+          <button id="btn-limpar-comprados" class="btn-acao">Remover comprados</button>
+          <button id="btn-limpar-tudo" class="btn-acao danger">Limpar tudo</button>
+        </div>
+      </div>
+      <div id="resumo" class="resumo"></div>
+    </header>
+
+    <div class="form-wrapper">
+      <form id="form-adicionar" class="form" autocomplete="off">
+        <div class="input-grupo">
+          <input
+            id="input-nome"
+            type="text"
+            placeholder="O que precisa comprar?"
+            required
+            autocomplete="off"
+          />
+          <div id="sugestoes" class="sugestoes" style="display:none"></div>
+        </div>
+        <div class="form-linha2">
+          <select id="select-categoria"></select>
+          <input id="input-qtd" type="number" value="1" min="1" step="1" />
+          <select id="select-unidade">
+            <option value="un">un</option>
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="L">L</option>
+            <option value="ml">ml</option>
+            <option value="cx">cx</option>
+            <option value="pct">pct</option>
+            <option value="dz">dz</option>
+          </select>
+          <button type="submit" class="btn-adicionar">+ Adicionar</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="lista" class="lista"></div>
+
+  </div>
+  <script src="dist/main.js"></script>
+</body>
+</html>

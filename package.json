@@ -1,0 +1,12 @@
+{
+  "name": "lista-mercado",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "esbuild src/main.ts --bundle --outfile=dist/main.js --target=es2020",
+    "dev": "esbuild src/main.ts --bundle --outfile=dist/main.js --target=es2020 --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "esbuild": "^0.20.0"
+  }
+}
