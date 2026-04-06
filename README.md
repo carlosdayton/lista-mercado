@@ -4,12 +4,14 @@
 
 **Uma lista de compras pessoal, rápida e inteligente — que funciona offline e vive no seu celular.**
 
-[![Deploy](https://img.shields.io/badge/Vercel-Deploy-black?style=flat-square&logo=vercel)](https://lista-mercado.vercel.app)
+[![Deploy](https://img.shields.io/badge/Vercel-Deploy-black?style=flat-square&logo=vercel)](https://checklist-market.vercel.app/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
 [![PWA](https://img.shields.io/badge/PWA-Instalável-5a0fc8?style=flat-square&logo=pwa)](https://web.dev/progressive-web-apps/)
 [![License](https://img.shields.io/badge/Licença-MIT-green?style=flat-square)](LICENSE)
 
-[**→ Abrir o app**](https://lista-mercado.vercel.app)
+[**→ Abrir o app**](https://checklist-market.vercel.app/)
+
+> **Nota de Arquitetura:** Você está na branch `main` (Versão Open-Source Puramente Offline e sem Login, rodando dados locais via LocalStorage). Para a versão "Premium" integrada com nuvem e login no Supabase, navegue para a branch `premium`.
 
 </div>
 
