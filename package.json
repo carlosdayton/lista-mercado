@@ -2,12 +2,16 @@
   "name": "lista-mercado",
   "version": "1.0.0",
   "scripts": {
-    "build": "esbuild src/main.ts --bundle --outfile=dist/main.js --target=es2020",
-    "dev": "esbuild src/main.ts --bundle --outfile=dist/main.js --target=es2020 --watch",
+    "build": "node build.mjs",
+    "dev": "node build.mjs --watch",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "esbuild": "^0.20.0"
+    "dotenv": "^17.4.1",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.101.1"
   }
 }

@@ -1,14 +1,14 @@
 import { preencherCategorias, configurarFormulario, configurarListaEventos, configurarFab } from './ui/eventos';
-import { renderizarLista, renderizarResumo } from './ui/render';
-import { obterPorCategoria } from './services/listaService';
+import { configurarAuthFallback } from './ui/auth';
 
 document.addEventListener('DOMContentLoaded', () => {
   preencherCategorias();
   configurarFab();
   configurarFormulario();
   configurarListaEventos();
-  renderizarLista(obterPorCategoria());
-  renderizarResumo();
+  
+  // Isso agora gerencia a tela inteira (login e carregamento inicial pós-login)
+  configurarAuthFallback();
 
   // Registra Service Worker (PWA offline)
   if ('serviceWorker' in navigator) {

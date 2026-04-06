@@ -15,29 +15,41 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Overlay de Autenticação -->
+  <div id="auth-overlay" class="auth-overlay">
+    <div class="auth-card">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h1 style="font-size: 24px; color: var(--blue);">🛒</h1>
+        <h2 id="auth-titulo" style="font-size: 20px; font-weight: 600; color: var(--text); margin-top: 8px;">Bem-vindo</h2>
+        <p id="auth-sub" style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">Entre na sua conta para acessar suas listas sincronizadas.</p>
+      </div>
+
+      <form id="form-auth" autocomplete="off">
+        <input type="email" id="auth-email" placeholder="Seu e-mail" required />
+        <input type="password" id="auth-senha" placeholder="Sua senha secreta" required minlength="6" />
+        <button type="submit" id="btn-auth-submit" class="auth-btn">Entrar</button>
+      </form>
+
+      <div class="auth-footer">
+        <span id="auth-toggle-texto">Ainda não tem conta?</span>
+        <button id="btn-auth-toggle" class="auth-toggle-btn">Criar conta</button>
+      </div>
+    </div>
+  </div>
+
   <div class="app">
 
     <header class="header">
       <div class="header-top">
         <h1>🛒 Lista do Mercado</h1>
         <div class="header-acoes">
-          <button id="btn-salvar-modelo" class="btn-acao" title="Salvar lista atual como modelo">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Salvar modelo
-          </button>
-          <button id="btn-modelos" class="btn-acao" title="Carregar um modelo salvo">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            Modelos
-          </button>
-          <button id="btn-compartilhar" class="btn-acao">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            Compartilhar
-          </button>
+          <button id="btn-salvar-modelo" class="btn-acao" title="Salvar lista">Salvar modelo</button>
+          <button id="btn-modelos" class="btn-acao" title="Modelos">Modelos</button>
+          <button id="btn-compartilhar" class="btn-acao">Compartilhar</button>
           <button id="btn-limpar-comprados" class="btn-acao">Remover comprados</button>
           <button id="btn-limpar-tudo" class="btn-acao danger">Limpar tudo</button>
-          <button id="btn-modo-compras" class="btn-acao btn-modo-compras-toggle">
-            🛒 Modo Compras
-          </button>
+          <button id="btn-modo-compras" class="btn-acao btn-modo-compras-toggle">🛒 Modo Compras</button>
+          <button id="btn-logout" class="btn-acao danger" title="Desconectar da conta">Sair</button>
         </div>
       </div>
       <div id="resumo" class="resumo"></div>

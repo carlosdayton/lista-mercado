@@ -1,56 +1,107 @@
 import { ItemLista, DadosCriacaoItem, DadosAtualizacaoItem, ItensPorCategoria } from '../types/item';
 import { Categoria } from '../enums/categoria';
-import { salvarItens, carregarItens } from './storageService';
+import { supabase } from './supabase';
+import { checkSession } from './authService';
 
-let itens: ItemLista[] = carregarItens();
+let itens: ItemLista[] = [];
+let userId: string | null = null;
 
-function gerarId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+export async function inicializarLista(): Promise<void> {
+  const user = await checkSession();
+  userId = user?.id || null;
+  
+  if (!userId) {
+    itens = [];
+    return;
+  }
+
+  const { data, error } = await supabase.from('itens').select('*').order('criado_em', { ascending: true });
+  
+  if (!error && data) {
+    itens = data.map(db => ({
+      id: db.id,
+      nome: db.nome,
+      categoria: db.categoria as Categoria,
+      quantidade: Number(db.quantidade),
+      unidade: db.unidade,
+      preco: db.preco ? Number(db.preco) : undefined,
+      nota: db.nota || undefined,
+      comprado: db.comprado,
+      criadoEm: new Date(db.criado_em)
+    }));
+  }
 }
 
-function persistir(): void {
-  salvarItens(itens);
-}
+export function adicionarItem(dados: DadosCriacaoItem): ItemLista | null {
+  if (!userId) return null;
 
-export function adicionarItem(dados: DadosCriacaoItem): ItemLista {
   const novo: ItemLista = {
     ...dados,
-    id: gerarId(),
+    id: crypto.randomUUID(),
     comprado: false,
     criadoEm: new Date()
   };
   itens.push(novo);
-  persistir();
+
+  // Background sync
+  supabase.from('itens').insert({
+    id: novo.id,
+    user_id: userId,
+    nome: novo.nome,
+    categoria: novo.categoria,
+    quantidade: novo.quantidade,
+    unidade: novo.unidade,
+    preco: novo.preco,
+    nota: novo.nota,
+    comprado: novo.comprado
+  }).then(({error}) => { if (error) console.error('Erro ao sync:', error); });
+
   return novo;
 }
 
 export function alternarComprado(id: string): void {
   const item = itens.find(i => i.id === id);
   if (!item) return;
+  
   item.comprado = !item.comprado;
-  persistir();
+  
+  supabase.from('itens')
+    .update({ comprado: item.comprado })
+    .eq('id', id)
+    .then();
 }
 
 export function atualizarItem(id: string, dados: DadosAtualizacaoItem): void {
   const index = itens.findIndex(i => i.id === id);
   if (index === -1) return;
+  
   itens[index] = { ...itens[index], ...dados };
-  persistir();
+  
+  supabase.from('itens')
+    .update({ ...dados })
+    .eq('id', id)
+    .then();
 }
 
 export function removerItem(id: string): void {
   itens = itens.filter(i => i.id !== id);
-  persistir();
+  supabase.from('itens').delete().eq('id', id).then();
 }
 
 export function removerComprados(): void {
+  const ids = itens.filter(i => i.comprado).map(i => i.id);
   itens = itens.filter(i => !i.comprado);
-  persistir();
+  
+  if (ids.length > 0) {
+    supabase.from('itens').delete().in('id', ids).then();
+  }
 }
 
 export function limparTudo(): void {
   itens = [];
-  persistir();
+  if (userId) {
+    supabase.from('itens').delete().eq('user_id', userId).then();
+  }
 }
 
 export function obterTodos(): ItemLista[] {
@@ -76,4 +127,4 @@ export function obterResumo(): { total: number; comprados: number; pendentes: nu
     ? itens.reduce((sum, i) => sum + (i.preco ?? 0), 0)
     : null;
   return { total: itens.length, comprados, pendentes: itens.length - comprados, totalEstimado };
-}
+}
