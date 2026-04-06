@@ -8,6 +8,8 @@ export interface ItemLista {
   categoria: Categoria;
   quantidade: number;
   unidade: Unidade;
+  preco?: number;       // preço unitário (opcional)
+  nota?: string;        // observação (opcional)
   comprado: boolean;
   criadoEm: Date;
 }

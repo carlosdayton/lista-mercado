@@ -69,7 +69,11 @@ export function obterPorCategoria(): ItensPorCategoria {
   }, vazio);
 }
 
-export function obterResumo(): { total: number; comprados: number; pendentes: number } {
+export function obterResumo(): { total: number; comprados: number; pendentes: number; totalEstimado: number | null } {
   const comprados = itens.filter(i => i.comprado).length;
-  return { total: itens.length, comprados, pendentes: itens.length - comprados };
-}
+  const itensComPreco = itens.filter(i => i.preco != null);
+  const totalEstimado = itensComPreco.length > 0
+    ? itens.reduce((sum, i) => sum + (i.preco ?? 0), 0)
+    : null;
+  return { total: itens.length, comprados, pendentes: itens.length - comprados, totalEstimado };
+}

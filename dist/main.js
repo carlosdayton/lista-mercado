@@ -155,6 +155,12 @@
 
   // src/services/storageService.ts
   var CHAVE = "lista-mercado-itens";
+  var UNIDADES_VALIDAS = ["un", "kg", "g", "L", "ml", "cx", "pct", "dz"];
+  function isItemValido(item) {
+    if (typeof item !== "object" || item === null) return false;
+    const i = item;
+    return typeof i["id"] === "string" && i["id"].length > 0 && typeof i["nome"] === "string" && i["nome"].length > 0 && typeof i["categoria"] === "string" && typeof i["quantidade"] === "number" && i["quantidade"] > 0 && typeof i["unidade"] === "string" && UNIDADES_VALIDAS.includes(i["unidade"]) && typeof i["comprado"] === "boolean";
+  }
   function salvarItens(itens2) {
     localStorage.setItem(CHAVE, JSON.stringify(itens2));
   }
@@ -164,10 +170,7 @@
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
-      return parsed.map((item) => {
-        const i = item;
-        return { ...i, criadoEm: new Date(i.criadoEm) };
-      });
+      return parsed.filter(isItemValido).map((item) => ({ ...item, criadoEm: new Date(item.criadoEm) }));
     } catch {
       return [];
     }
@@ -198,6 +201,12 @@
     item.comprado = !item.comprado;
     persistir();
   }
+  function atualizarItem(id, dados) {
+    const index = itens.findIndex((i) => i.id === id);
+    if (index === -1) return;
+    itens[index] = { ...itens[index], ...dados };
+    persistir();
+  }
   function removerItem(id) {
     itens = itens.filter((i) => i.id !== id);
     persistir();
@@ -209,6 +218,9 @@
   function limparTudo() {
     itens = [];
     persistir();
+  }
+  function obterTodos() {
+    return itens;
   }
   function obterPorCategoria() {
     const vazio = Object.values(Categoria).reduce((acc, cat) => {
@@ -222,7 +234,9 @@
   }
   function obterResumo() {
     const comprados = itens.filter((i) => i.comprado).length;
-    return { total: itens.length, comprados, pendentes: itens.length - comprados };
+    const itensComPreco = itens.filter((i) => i.preco != null);
+    const totalEstimado = itensComPreco.length > 0 ? itens.reduce((sum, i) => sum + (i.preco ?? 0), 0) : null;
+    return { total: itens.length, comprados, pendentes: itens.length - comprados, totalEstimado };
   }
 
   // src/ui/render.ts
@@ -237,31 +251,55 @@
     ["Limpeza" /* Limpeza */]: "\u{1F9F9}",
     ["Outros" /* Outros */]: "\u{1F4E6}"
   };
+  function escaparHtml(texto) {
+    return texto.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function formatarPreco(valor) {
+    return `R$ ${valor.toFixed(2).replace(".", ",")}`;
+  }
   function renderizarResumo() {
-    const { total, comprados, pendentes } = obterResumo();
+    const { total, comprados, pendentes, totalEstimado } = obterResumo();
     const el = document.getElementById("resumo");
     const pct = total > 0 ? Math.round(comprados / total * 100) : 0;
+    document.title = pendentes > 0 ? `(${pendentes}) Lista do Mercado` : "Lista do Mercado";
+    const ticketHtml = totalEstimado != null ? `
+    <div class="resumo-ticket">
+      <span class="ticket-label">Total estimado</span>
+      <span class="ticket-valor">${formatarPreco(totalEstimado)}</span>
+    </div>` : "";
     el.innerHTML = `
     <div class="resumo-stats">
       <span class="resumo-item"><strong>${total}</strong> itens</span>
       <span class="resumo-item ok"><strong>${comprados}</strong> comprados</span>
       <span class="resumo-item pend"><strong>${pendentes}</strong> pendentes</span>
     </div>
-    <div class="progress-bar">
-      <div class="progress-fill" style="width: ${pct}%"></div>
+    ${ticketHtml}
+    <div class="progress-wrap">
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${pct}%"></div>
+      </div>
+      <span class="progress-pct">${pct}%</span>
     </div>
   `;
   }
   function renderizarItem(item) {
+    const nomeEscapado = escaparHtml(item.nome);
+    const notaHtml = item.nota ? `<span class="item-nota">${escaparHtml(item.nota)}</span>` : "";
+    const precoLabel = item.preco != null ? formatarPreco(item.preco) : "R$ \u2014";
+    const precoClass = item.preco != null ? "item-preco" : "item-preco sem-preco";
     return `
     <li class="item${item.comprado ? " comprado" : ""}" data-id="${item.id}">
       <button class="btn-check" data-id="${item.id}" aria-label="marcar como comprado">
         ${item.comprado ? `<svg width="12" height="12" viewBox="0 0 12 12"><polyline points="1.5,6 4.5,9.5 10.5,2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ""}
       </button>
       <div class="item-info">
-        <span class="item-nome">${item.nome}</span>
+        <span class="item-nome">${nomeEscapado}</span>
+        ${notaHtml}
         <span class="item-qtd">${item.quantidade} ${item.unidade}</span>
       </div>
+      <span class="${precoClass}" data-id="${item.id}" data-preco="${item.preco ?? ""}"
+        title="Clique para editar pre\xE7o" role="button" tabindex="0"
+        aria-label="pre\xE7o: ${precoLabel}">${precoLabel}</span>
       <button class="btn-remover" data-id="${item.id}" aria-label="remover item">
         <svg width="12" height="12" viewBox="0 0 12 12"><line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>
@@ -269,12 +307,10 @@
   `;
   }
   function renderizarLista(porCategoria) {
-    const container = document.getElementById("lista");
-    const categorias = Object.values(Categoria).filter(
-      (cat) => porCategoria[cat].length > 0
-    );
+    const container2 = document.getElementById("lista");
+    const categorias = Object.values(Categoria).filter((cat) => porCategoria[cat].length > 0);
     if (categorias.length === 0) {
-      container.innerHTML = `
+      container2.innerHTML = `
       <div class="vazio">
         <div class="vazio-icone">\u{1F6D2}</div>
         <p class="vazio-titulo">Sua lista est\xE1 vazia</p>
@@ -283,8 +319,12 @@
     `;
       return;
     }
-    container.innerHTML = categorias.map((cat) => {
+    container2.innerHTML = categorias.map((cat) => {
       const itens2 = porCategoria[cat];
+      const itensOrdenados = [...itens2].sort((a, b) => {
+        if (a.comprado === b.comprado) return 0;
+        return a.comprado ? 1 : -1;
+      });
       const qtdComprados = itens2.filter((i) => i.comprado).length;
       const tudo = qtdComprados === itens2.length;
       return `
@@ -294,7 +334,7 @@
           <span class="categoria-nome">${cat}</span>
           <span class="categoria-count">${qtdComprados}/${itens2.length}</span>
         </div>
-        <ul class="itens">${itens2.map(renderizarItem).join("")}</ul>
+        <ul class="itens">${itensOrdenados.map(renderizarItem).join("")}</ul>
       </section>
     `;
     }).join("");
@@ -308,17 +348,302 @@
     }
     el.style.display = "block";
     el.innerHTML = sugestoes.map((s) => `
-    <div class="sugestao" data-nome="${s.nome}" data-categoria="${s.categoria}">
-      <span>${s.nome}</span>
-      <span class="sugestao-cat">${s.categoria}</span>
+    <div class="sugestao" data-nome="${escaparHtml(s.nome)}" data-categoria="${escaparHtml(s.categoria)}">
+      <span>${escaparHtml(s.nome)}</span>
+      <span class="sugestao-cat">${escaparHtml(s.categoria)}</span>
     </div>
   `).join("");
+  }
+
+  // src/ui/toast.ts
+  var container = null;
+  function obterContainer() {
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toast-container";
+      document.body.appendChild(container);
+    }
+    return container;
+  }
+  function mostrarToast(mensagem, tipo = "sucesso", opcoes = {}) {
+    const duracao = opcoes.duracao ?? 3e3;
+    const icones = {
+      sucesso: "\u2713",
+      aviso: "\u26A0",
+      erro: "\u2715",
+      info: "\u2139"
+    };
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${tipo}`;
+    toast.innerHTML = `
+    <span class="toast-icone">${icones[tipo]}</span>
+    <span class="toast-msg">${mensagem}</span>
+    <div class="toast-progress"></div>
+  `;
+    const c = obterContainer();
+    c.appendChild(toast);
+    toast.getBoundingClientRect();
+    toast.classList.add("toast-visivel");
+    const barra = toast.querySelector(".toast-progress");
+    barra.style.transition = `width ${duracao}ms linear`;
+    barra.style.width = "0%";
+    const timer = setTimeout(() => fecharToast(toast), duracao);
+    toast.addEventListener("click", () => {
+      clearTimeout(timer);
+      fecharToast(toast);
+    });
+  }
+  function fecharToast(toast) {
+    toast.classList.remove("toast-visivel");
+    toast.classList.add("toast-saindo");
+    toast.addEventListener("animationend", () => toast.remove(), { once: true });
+  }
+
+  // src/ui/modal.ts
+  function confirmar(mensagem, opcaoConfirmar = "Confirmar", opcaoCancelar = "Cancelar") {
+    return new Promise((resolve) => {
+      const backdrop = document.createElement("div");
+      backdrop.className = "modal-backdrop";
+      const card = document.createElement("div");
+      card.className = "modal-card";
+      card.setAttribute("role", "dialog");
+      card.setAttribute("aria-modal", "true");
+      card.innerHTML = `
+      <p class="modal-mensagem">${mensagem}</p>
+      <div class="modal-acoes">
+        <button class="modal-btn modal-btn-cancelar" id="modal-cancelar">${opcaoCancelar}</button>
+        <button class="modal-btn modal-btn-confirmar" id="modal-confirmar">${opcaoConfirmar}</button>
+      </div>
+    `;
+      backdrop.appendChild(card);
+      document.body.appendChild(backdrop);
+      backdrop.getBoundingClientRect();
+      backdrop.classList.add("modal-visivel");
+      function fechar(resultado) {
+        backdrop.classList.remove("modal-visivel");
+        backdrop.classList.add("modal-saindo");
+        backdrop.addEventListener("animationend", () => {
+          backdrop.remove();
+          resolve(resultado);
+        }, { once: true });
+      }
+      card.querySelector("#modal-confirmar").addEventListener("click", () => fechar(true));
+      card.querySelector("#modal-cancelar").addEventListener("click", () => fechar(false));
+      function onKeyDown(e) {
+        if (e.key === "Escape") {
+          document.removeEventListener("keydown", onKeyDown);
+          fechar(false);
+        }
+        if (e.key === "Enter") {
+          document.removeEventListener("keydown", onKeyDown);
+          fechar(true);
+        }
+      }
+      document.addEventListener("keydown", onKeyDown);
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) fechar(false);
+      });
+      setTimeout(() => card.querySelector("#modal-confirmar")?.focus(), 50);
+    });
+  }
+
+  // src/services/modelosService.ts
+  var CHAVE2 = "lista-mercado-modelos";
+  function gerarId2() {
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  }
+  function salvarModelo(nome, itens2) {
+    const modelos = obterModelos();
+    const modelo = { id: gerarId2(), nome, criadoEm: /* @__PURE__ */ new Date(), itens: [...itens2] };
+    modelos.push(modelo);
+    localStorage.setItem(CHAVE2, JSON.stringify(modelos));
+    return modelo;
+  }
+  function obterModelos() {
+    try {
+      const raw = localStorage.getItem(CHAVE2);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((m) => ({
+        ...m,
+        criadoEm: new Date(m["criadoEm"])
+      }));
+    } catch {
+      return [];
+    }
+  }
+  function removerModelo(id) {
+    const modelos = obterModelos().filter((m) => m.id !== id);
+    localStorage.setItem(CHAVE2, JSON.stringify(modelos));
+  }
+  function aplicarModelo(id) {
+    const modelo = obterModelos().find((m) => m.id === id);
+    if (!modelo) return;
+    limparTudo();
+    modelo.itens.forEach((item) => adicionarItem(item));
+  }
+
+  // src/ui/modelos.ts
+  function criarBackdrop() {
+    const el = document.createElement("div");
+    el.className = "modal-backdrop";
+    return el;
+  }
+  function fecharBackdrop(backdrop) {
+    backdrop.classList.remove("modal-visivel");
+    backdrop.classList.add("modal-saindo");
+    backdrop.addEventListener("animationend", () => backdrop.remove(), { once: true });
+  }
+  function abrirModalSalvar() {
+    const itens2 = obterTodos();
+    if (itens2.length === 0) {
+      mostrarToast("Lista vazia \u2014 adicione itens primeiro", "aviso");
+      return;
+    }
+    const backdrop = criarBackdrop();
+    const card = document.createElement("div");
+    card.className = "modal-card";
+    card.setAttribute("role", "dialog");
+    card.innerHTML = `
+    <p class="modal-mensagem">Dar um nome para este modelo:</p>
+    <input id="input-nome-modelo" type="text" class="input-nome-modelo"
+      placeholder="Ex: Lista semanal, Churrasco..." autocomplete="off" />
+    <p class="modal-preview-info">${itens2.length} ${itens2.length === 1 ? "item ser\xE1 salvo" : "itens ser\xE3o salvos"}</p>
+    <div class="modal-acoes" style="margin-top:16px">
+      <button class="modal-btn modal-btn-cancelar" id="mc-cancelar">Cancelar</button>
+      <button class="modal-btn modal-btn-confirmar" id="mc-salvar">Salvar</button>
+    </div>
+  `;
+    backdrop.appendChild(card);
+    document.body.appendChild(backdrop);
+    backdrop.getBoundingClientRect();
+    backdrop.classList.add("modal-visivel");
+    const inputNome = card.querySelector("#input-nome-modelo");
+    setTimeout(() => inputNome.focus(), 50);
+    const fechar = () => fecharBackdrop(backdrop);
+    function salvar() {
+      const nome = inputNome.value.trim();
+      if (!nome) {
+        inputNome.style.borderColor = "var(--red)";
+        inputNome.focus();
+        return;
+      }
+      const itensModelo = itens2.map(({ nome: nome2, categoria, quantidade, unidade, nota }) => ({ nome: nome2, categoria, quantidade, unidade, ...nota ? { nota } : {} }));
+      salvarModelo(nome, itensModelo);
+      fechar();
+      mostrarToast(`Modelo "${nome}" salvo!`, "sucesso");
+    }
+    card.querySelector("#mc-cancelar").addEventListener("click", fechar);
+    card.querySelector("#mc-salvar").addEventListener("click", salvar);
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop) fechar();
+    });
+    inputNome.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        salvar();
+      }
+      if (e.key === "Escape") fechar();
+    });
+  }
+  function abrirModalModelos(onAtualizar) {
+    const backdrop = criarBackdrop();
+    const card = document.createElement("div");
+    card.className = "modal-card modal-modelos";
+    card.setAttribute("role", "dialog");
+    backdrop.appendChild(card);
+    document.body.appendChild(backdrop);
+    backdrop.getBoundingClientRect();
+    backdrop.classList.add("modal-visivel");
+    const fechar = () => fecharBackdrop(backdrop);
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop) fechar();
+    });
+    function renderizar() {
+      const modelos = obterModelos();
+      if (modelos.length === 0) {
+        card.innerHTML = `
+        <p class="modal-titulo">Modelos salvos</p>
+        <p class="modal-mensagem" style="text-align:center;padding:20px 0;color:var(--text-muted)">
+          Nenhum modelo ainda.<br>Use "Salvar modelo" para criar.
+        </p>
+        <div class="modal-acoes"><button class="modal-btn modal-btn-cancelar" id="mc-fechar">Fechar</button></div>
+      `;
+      } else {
+        card.innerHTML = `
+        <p class="modal-titulo">Modelos salvos</p>
+        <ul class="modelos-lista">
+          ${modelos.map((m) => `
+            <li class="modelo-item" data-id="${m.id}">
+              <div class="modelo-info">
+                <span class="modelo-nome">${escaparHtml(m.nome)}</span>
+                <span class="modelo-meta">${m.itens.length} ${m.itens.length === 1 ? "item" : "itens"} \xB7 ${m.criadoEm.toLocaleDateString("pt-BR")}</span>
+              </div>
+              <div class="modelo-btns">
+                <button class="btn-acao btn-carregar-modelo" data-id="${m.id}">Carregar</button>
+                <button class="btn-acao danger btn-del-modelo" data-id="${m.id}" title="Excluir">\u2715</button>
+              </div>
+            </li>
+          `).join("")}
+        </ul>
+        <div class="modal-acoes" style="margin-top:16px">
+          <button class="modal-btn modal-btn-cancelar" id="mc-fechar">Fechar</button>
+        </div>
+      `;
+      }
+      card.querySelector("#mc-fechar")?.addEventListener("click", fechar);
+      card.querySelectorAll(".btn-carregar-modelo").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          aplicarModelo(btn.dataset["id"]);
+          fechar();
+          onAtualizar();
+          mostrarToast("Modelo carregado!", "sucesso");
+        });
+      });
+      card.querySelectorAll(".btn-del-modelo").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const ok = await confirmar("Excluir este modelo?", "Excluir", "Cancelar");
+          if (ok) {
+            removerModelo(btn.dataset["id"]);
+            renderizar();
+            mostrarToast("Modelo exclu\xEDdo", "aviso");
+          }
+        });
+      });
+    }
+    renderizar();
+  }
+  function configurarModelos(onAtualizar) {
+    document.getElementById("btn-salvar-modelo")?.addEventListener("click", abrirModalSalvar);
+    document.getElementById("btn-modelos")?.addEventListener("click", () => abrirModalModelos(onAtualizar));
   }
 
   // src/ui/eventos.ts
   function atualizar() {
     renderizarLista(obterPorCategoria());
     renderizarResumo();
+  }
+  function configurarFab() {
+    const fab = document.getElementById("fab");
+    const form = document.getElementById("form-adicionar");
+    const fechar = document.getElementById("btn-fechar");
+    const input = document.getElementById("input-nome");
+    function abrirForm() {
+      fab.style.display = "none";
+      form.classList.add("aberto");
+      input.focus();
+    }
+    function fecharForm() {
+      form.classList.remove("aberto");
+      fab.style.display = "flex";
+      renderizarSugestoes([]);
+    }
+    fab.addEventListener("click", abrirForm);
+    fechar.addEventListener("click", fecharForm);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && form.classList.contains("aberto")) fecharForm();
+    });
   }
   function preencherCategorias() {
     const select = document.getElementById("select-categoria");
@@ -333,25 +658,22 @@
   function configurarFormulario() {
     const inputNome = document.getElementById("input-nome");
     const inputQtd = document.getElementById("input-qtd");
+    const inputNota = document.getElementById("input-nota");
     const selectCat = document.getElementById("select-categoria");
     const selectUnidade = document.getElementById("select-unidade");
     const sugestoesEl = document.getElementById("sugestoes");
-    inputNome.addEventListener("input", () => {
-      const sugestoes = buscarSugestoes(inputNome.value);
-      renderizarSugestoes(sugestoes);
-    });
+    const fab = document.getElementById("fab");
+    const form = document.getElementById("form-adicionar");
+    inputNome.addEventListener("input", () => renderizarSugestoes(buscarSugestoes(inputNome.value)));
     document.addEventListener("click", (e) => {
-      if (!sugestoesEl.contains(e.target) && e.target !== inputNome) {
-        renderizarSugestoes([]);
-      }
+      if (!sugestoesEl.contains(e.target) && e.target !== inputNome) renderizarSugestoes([]);
     });
     sugestoesEl.addEventListener("click", (e) => {
       const target = e.target.closest(".sugestao");
       if (!target) return;
       const nome = target.dataset["nome"] ?? "";
       const categoria = target.dataset["categoria"];
-      const sugestoes = buscarSugestoes(nome);
-      const sugestao = sugestoes.find((s) => s.nome === nome);
+      const sugestao = buscarSugestoes(nome).find((s) => s.nome === nome);
       inputNome.value = nome;
       selectCat.value = categoria;
       if (sugestao) {
@@ -361,25 +683,69 @@
       renderizarSugestoes([]);
       inputNome.focus();
     });
-    const form = document.getElementById("form-adicionar");
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const nome = inputNome.value.trim();
       const categoria = selectCat.value;
       const quantidade = Number(inputQtd.value);
       const unidade = selectUnidade.value;
+      const nota = inputNota?.value.trim() || void 0;
       if (!nome || quantidade <= 0) return;
-      adicionarItem({ nome, categoria, quantidade, unidade });
+      adicionarItem({ nome, categoria, quantidade, unidade, ...nota ? { nota } : {} });
       atualizar();
+      mostrarToast(`"${nome}" adicionado!`, "sucesso");
       inputNome.value = "";
       inputQtd.value = "1";
+      if (inputNota) inputNota.value = "";
       renderizarSugestoes([]);
-      inputNome.focus();
+      form.classList.remove("aberto");
+      fab.style.display = "flex";
+    });
+  }
+  function editarPrecoInline(el) {
+    if (el.querySelector("input")) return;
+    const id = el.dataset["id"];
+    const valorAtual = el.dataset["preco"] ?? "";
+    el.innerHTML = "";
+    const input = document.createElement("input");
+    input.type = "number";
+    input.min = "0";
+    input.step = "0.01";
+    input.value = valorAtual;
+    input.className = "input-preco-inline";
+    input.placeholder = "0,00";
+    el.appendChild(input);
+    input.focus();
+    input.select();
+    let salvo = false;
+    function salvar() {
+      if (salvo) return;
+      salvo = true;
+      const raw = parseFloat(input.value.replace(",", "."));
+      const preco = !isNaN(raw) && raw > 0 ? raw : void 0;
+      atualizarItem(id, { preco });
+      atualizar();
+    }
+    input.addEventListener("blur", salvar);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        salvar();
+      }
+      if (e.key === "Escape") {
+        salvo = true;
+        atualizar();
+      }
     });
   }
   function configurarListaEventos() {
     document.getElementById("lista").addEventListener("click", (e) => {
       const target = e.target;
+      const precoEl = target.closest(".item-preco");
+      if (precoEl) {
+        editarPrecoInline(precoEl);
+        return;
+      }
       const btn = target.closest("button");
       if (!btn) return;
       const id = btn.dataset["id"];
@@ -393,24 +759,71 @@
         atualizar();
       }
     });
+    document.getElementById("lista").addEventListener("keydown", (e) => {
+      const precoEl = e.target.closest(".item-preco");
+      if (precoEl && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        editarPrecoInline(precoEl);
+      }
+    });
     document.getElementById("btn-limpar-comprados").addEventListener("click", () => {
       removerComprados();
       atualizar();
+      mostrarToast("Itens comprados removidos", "aviso");
     });
-    document.getElementById("btn-limpar-tudo").addEventListener("click", () => {
-      if (confirm("Tem certeza que deseja limpar toda a lista?")) {
+    document.getElementById("btn-limpar-tudo").addEventListener("click", async () => {
+      const ok = await confirmar("Tem certeza que deseja limpar toda a lista?", "Limpar tudo", "Cancelar");
+      if (ok) {
         limparTudo();
         atualizar();
+        mostrarToast("Lista limpa!", "aviso");
       }
     });
+    document.getElementById("btn-compartilhar")?.addEventListener("click", () => {
+      const itens2 = obterTodos();
+      if (itens2.length === 0) {
+        mostrarToast("A lista est\xE1 vazia!", "aviso");
+        return;
+      }
+      const porCategoria = {};
+      itens2.forEach((item) => {
+        if (!porCategoria[item.categoria]) porCategoria[item.categoria] = [];
+        const status = item.comprado ? "\u2713" : "\u2610";
+        const precoStr = item.preco != null ? ` (R$ ${item.preco.toFixed(2).replace(".", ",")})` : "";
+        const notaStr = item.nota ? ` [${item.nota}]` : "";
+        porCategoria[item.categoria].push(`  ${status} ${item.nome} \u2014 ${item.quantidade} ${item.unidade}${precoStr}${notaStr}`);
+      });
+      const linhas = ["\u{1F6D2} Lista do Mercado", ""];
+      Object.entries(porCategoria).forEach(([cat, itensLinha]) => {
+        linhas.push(`\u{1F4CC} ${cat}`);
+        linhas.push(...itensLinha);
+        linhas.push("");
+      });
+      navigator.clipboard.writeText(linhas.join("\n").trim()).then(() => mostrarToast("Lista copiada!", "sucesso")).catch(() => mostrarToast("N\xE3o foi poss\xEDvel copiar", "erro"));
+    });
+    const btnModo = document.getElementById("btn-modo-compras");
+    const btnSair = document.getElementById("btn-sair-modo");
+    btnModo?.addEventListener("click", () => {
+      document.body.classList.add("modo-compras");
+      mostrarToast("Modo compras ativado \u2014 toque nos itens para marcar", "info");
+    });
+    btnSair?.addEventListener("click", () => {
+      document.body.classList.remove("modo-compras");
+    });
+    configurarModelos(atualizar);
   }
 
   // src/main.ts
   document.addEventListener("DOMContentLoaded", () => {
     preencherCategorias();
+    configurarFab();
     configurarFormulario();
     configurarListaEventos();
     renderizarLista(obterPorCategoria());
     renderizarResumo();
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {
+      });
+    }
   });
 })();
