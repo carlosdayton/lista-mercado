@@ -1,13 +1,31 @@
 import * as esbuild from 'esbuild';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import fs from 'fs';
 
 const isDev = process.argv.includes('--watch');
 
-const url = 'https://kspvwthqhsfhxokfysnm.supabase.co';
-// Ensure the anon key is populated, else fallback safely to avoid syntax errors
-const anon = process.env.SERVICE_ROLE || '';
+let url = '';
+let anon = '';
+
+if (fs.existsSync('.env')) {
+  const envFile = fs.readFileSync('.env', 'utf8');
+  for (const line of envFile.split('\n')) {
+    if (line.includes('PROJECT_URL')) {
+      const match = line.match(/(https:\/\/[A-Za-z0-9_-]+\.supabase\.co)/);
+      if (match) url = match[1];
+    }
+    if (line.includes('SERVICE_ROLE') || line.includes('ANON_KEY') || line.includes('PUBLISHABLE')) {
+      const matchJwt = line.match(/(eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)/);
+      if (matchJwt) anon = matchJwt[1];
+      else {
+        const matchSb = line.match(/(sb_publishable_[A-Za-z0-9_]+)/);
+        if (matchSb) anon = matchSb[1];
+      }
+    }
+  }
+}
+
+console.log("Extracted URL:", url ? "OK" : "MISSING");
+console.log("Extracted ANON:", anon ? "OK" : "MISSING");
 
 esbuild.context({
   entryPoints: ['src/main.ts'],
