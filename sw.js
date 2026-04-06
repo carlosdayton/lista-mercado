@@ -1,4 +1,4 @@
-const CACHE = 'lista-mercado-v3';
+const CACHE = 'lista-mercado-v5';
 const STATIC = ['/', '/index.html', '/style.css', '/dist/main.js', '/manifest.json', '/icons/icon.svg'];
 
 self.addEventListener('install', (event) => {
