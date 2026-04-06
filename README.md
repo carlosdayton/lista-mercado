@@ -1,15 +1,14 @@
 <div align="center">
 
-# 🛒 Lista do Mercado
+# 🛒 Lista do Mercado ✨ (Edição Premium: Supabase Cloud Sync)
 
-**Uma lista de compras pessoal, rápida e inteligente — que funciona offline e vive no seu celular.**
+**Uma lista de compras pessoal, rápida e inteligente — atrelada à segurança da Nuvem!**
 
-[![Deploy](https://img.shields.io/badge/Vercel-Deploy-black?style=flat-square&logo=vercel)](https://lista-mercado.vercel.app)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
 [![PWA](https://img.shields.io/badge/PWA-Instalável-5a0fc8?style=flat-square&logo=pwa)](https://web.dev/progressive-web-apps/)
-[![License](https://img.shields.io/badge/Licença-MIT-green?style=flat-square)](LICENSE)
+[![Supabase](https://img.shields.io/badge/Supabase-Auth_&_Postgres-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com)
 
-[**→ Abrir o app**](https://lista-mercado.vercel.app)
+> **Nota de Arquitetura:** Esta é a branch `premium`, desenvolvida com arquitetura de Nuvem (Cloud Sync) utilizando Supabase, Autenticação de Usuários com RLS (Row Level Security) e controle de persistência Remota. Para a versão 100% Offline via LocalStorage e sem banco de dados, acesse a branch `main`.
 
 </div>
 
