@@ -3,10 +3,12 @@ import fs from 'fs';
 
 const isDev = process.argv.includes('--watch');
 
-let url = '';
-let anon = '';
+let url = process.env.PROJECT_URL || '';
+let anon = process.env.SERVICE_ROLE || '';
 
-if (fs.existsSync('.env')) {
+// Apenas se tiver o arquivo (Modo Local/PC), ele usa nosso Scanner forte que ignora quebras e lixos inseridos pelo usuário.
+// Na nuvem da Vercel o arquivo não existe, então ele usa direto as variaveis de cima!
+if (fs.existsSync('.env') && (!url || !anon)) {
   const envFile = fs.readFileSync('.env', 'utf8');
   for (const line of envFile.split('\n')) {
     if (line.includes('PROJECT_URL')) {
