@@ -75,17 +75,25 @@ body {
   padding: 8px 16px;
   border-radius: var(--radius-xs);
   border: 1px solid var(--border2);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: var(--text);
   cursor: pointer;
   transition: all .2s;
   white-space: nowrap;
   font-family: inherit;
-  font-weight: 500;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 .btn-acao:hover { 
   background: rgba(255, 255, 255, 0.1); 
   border-color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+  transform: translateY(-1px);
 }
 .btn-acao.danger { color: #ffb1b1; }
 .btn-acao.danger:hover { background: var(--red-bg); border-color: var(--red); color: white; }
@@ -323,11 +331,77 @@ select option {
 }
 
 /* ── Modal (Modelos) ───────────────────────────── */
-.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; }
-.modal-visivel { animation: fadeIn .2s forwards; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.modal-card { background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(25px); border: 1px solid var(--border2); border-radius: var(--radius); padding: 32px; max-width: 420px; width: 100%; box-shadow: 0 24px 80px rgba(0,0,0,0.7); }
+.modal-backdrop { 
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0,0,0,0.8); 
+  backdrop-filter: blur(8px); 
+  -webkit-backdrop-filter: blur(8px); 
+  z-index: 300; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  padding: 24px; 
+  opacity: 0; 
+}
+
+.modal-visivel { animation: fadeIn .25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+.modal-saindo { animation: fadeOut .2s ease-in forwards; }
+
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.98); } }
+
+.modal-card { 
+  background: rgba(30, 41, 59, 0.85); 
+  backdrop-filter: blur(25px); 
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid var(--border2); 
+  border-radius: var(--radius); 
+  padding: 32px; 
+  max-width: 420px; 
+  width: 100%; 
+  box-shadow: 0 24px 80px rgba(0,0,0,0.7); 
+}
+
 .modal-titulo { font-size: 20px; font-weight: 700; color: var(--neon-cyan); margin-bottom: 20px; }
-.modal-btn { padding: 10px 20px; border-radius: var(--radius-xs); font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; border: none; }
+.modal-mensagem { font-size: 15px; color: var(--text); margin-bottom: 20px; line-height: 1.6; }
+
+.input-nome-modelo {
+  width: 100%;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 16px;
+  outline: none;
+  margin-bottom: 15px;
+  transition: all 0.2s;
+}
+.input-nome-modelo:focus {
+  border-color: var(--neon-cyan);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+}
+
+.modal-preview-info { font-size: 12px; color: var(--text-muted); opacity: 0.8; }
+
+.modal-acoes { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+.modal-btn { 
+  padding: 12px 24px; 
+  border-radius: var(--radius-sm); 
+  font-size: 14px; 
+  font-weight: 700; 
+  cursor: pointer; 
+  transition: all .2s; 
+  border: none; 
+  font-family: inherit; 
+}
 .modal-btn-confirmar { background: var(--gradient-neon); color: #06080a; }
-.modal-btn-cancelar { background: rgba(255, 255, 255, 0.1); color: var(--text); }
+.modal-btn-cancelar { 
+  background: rgba(255, 255, 255, 0.08); 
+  color: var(--text); 
+  border: 1px solid var(--border); 
+}
+.modal-btn-cancelar:hover { background: rgba(255, 255, 255, 0.15); }
