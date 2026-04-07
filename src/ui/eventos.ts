@@ -1,6 +1,7 @@
 import { Categoria } from '../enums/categoria';
 import { Unidade } from '../types/item';
 import { buscarSugestoes } from '../data/itensSugeridos';
+import { debounce } from '../utils/debounce';
 import {
   adicionarItem, alternarComprado, removerItem, atualizarItem,
   removerComprados, limparTudo, obterPorCategoria, obterTodos
@@ -54,7 +55,8 @@ export function configurarFormulario(): void {
   const fab           = document.getElementById('fab')!;
   const form          = document.getElementById('form-adicionar') as HTMLFormElement;
 
-  inputNome.addEventListener('input', () => renderizarSugestoes(buscarSugestoes(inputNome.value)));
+  const buscarComDebounce = debounce(() => renderizarSugestoes(buscarSugestoes(inputNome.value)), 200);
+  inputNome.addEventListener('input', buscarComDebounce);
 
   document.addEventListener('click', (e: MouseEvent) => {
     if (!sugestoesEl.contains(e.target as Node) && e.target !== inputNome) renderizarSugestoes([]);
