@@ -9,6 +9,7 @@ import { renderizarLista, renderizarResumo, renderizarSugestoes } from './render
 import { mostrarToast } from './toast';
 import { confirmar } from './modal';
 import { configurarModelos } from './modelos';
+import { Calculadora } from './calculadora';
 
 function atualizar(): void {
   renderizarLista(obterPorCategoria());
@@ -199,6 +200,11 @@ export function configurarListaEventos(): void {
 
   btnSair?.addEventListener('click', () => {
     document.body.classList.remove('modo-compras');
+  });
+
+  // ── Calculadora ───────────────────────────────────
+  document.getElementById('btn-calculadora')?.addEventListener('click', () => {
+    Calculadora.toggle();
   });
 
   // ── Modelos ───────────────────────────────────────
