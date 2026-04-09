@@ -287,7 +287,9 @@ select option {
   cursor: pointer;
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
 }
-.modo-compras .form-wrapper, .modo-compras .header-acoes, .modo-compras .btn-remover, .modo-compras .item-preco { display: none !important; }
+.modo-compras .form-wrapper, .modo-compras .btn-remover, .modo-compras .item-preco { display: none !important; }
+.modo-compras .header-acoes button:not(.sempre-visivel) { display: none !important; }
+.modo-compras .header-acoes { justify-content: center; }
 .modo-compras .btn-sair-modo { display: flex !important; }
 .modo-compras body { padding-bottom: 120px !important; }
 
@@ -405,3 +407,175 @@ select option {
   border: 1px solid var(--border); 
 }
 .modal-btn-cancelar:hover { background: rgba(255, 255, 255, 0.15); }
+
+/* ── Calculadora ────────────────────────────────── */
+.calc-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.calc-overlay.ativa {
+  visibility: visible;
+  opacity: 1;
+}
+
+.calc-card {
+  width: 100%;
+  max-width: 320px;
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+  transform: translateY(20px) scale(0.95);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.calc-overlay.ativa .calc-card {
+  transform: translateY(0) scale(1);
+}
+
+.calc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.calc-titulo {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--neon-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.calc-fechar {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.calc-fechar:hover {
+  background: var(--red-bg);
+  border-color: var(--red);
+  color: white;
+}
+
+.calc-visor {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  font-size: 32px;
+  font-weight: 700;
+  color: #fff;
+  text-align: right;
+  margin-bottom: 20px;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-family: 'Courier New', Courier, monospace;
+  overflow: hidden;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.calc-btn {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border2);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.calc-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--border2);
+  transform: translateY(-2px);
+}
+
+.calc-btn:active {
+  transform: scale(0.95);
+}
+
+.calc-btn.num {
+  font-weight: 500;
+}
+
+.calc-btn.zero {
+  grid-column: span 2;
+  aspect-ratio: auto;
+}
+
+.calc-btn.op {
+  background: rgba(14, 165, 233, 0.1);
+  border-color: rgba(14, 165, 233, 0.2);
+  color: var(--blue);
+  font-size: 20px;
+}
+
+.calc-btn.op:hover {
+  background: var(--blue);
+  color: #06080a;
+}
+
+.calc-btn.op-special {
+  color: var(--yellow);
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.calc-btn.op-special:hover {
+  background: var(--yellow);
+  color: #06080a;
+}
+
+.calc-btn.equal {
+  grid-row: span 2;
+  aspect-ratio: auto;
+  background: var(--gradient-neon);
+  color: #06080a;
+  border: none;
+  font-size: 24px;
+}
+
+.calc-btn.equal:hover {
+  box-shadow: 0 0 20px rgba(57, 255, 20, 0.4);
+}
