@@ -34,9 +34,8 @@ export class Calculadora {
   }
 
   private criarDOM(): void {
-    const calc = document.createElement('div');
-    calc.className = 'calc-overlay';
-    calc.innerHTML = `
+    const container = document.getElementById('calc-sidebar')!;
+    container.innerHTML = `
       <div class="calc-card">
         <div class="calc-header">
           <span class="calc-titulo">🧮 Calculadora</span>
@@ -69,14 +68,12 @@ export class Calculadora {
         </div>
       </div>
     `;
-    document.body.appendChild(calc);
-    this.el = calc;
-    this.visor = calc.querySelector('.calc-visor');
+    this.el = container;
+    this.visor = container.querySelector('.calc-visor');
 
-    calc.querySelector('.calc-fechar')!.addEventListener('click', () => this.mostrar(false));
-    calc.addEventListener('click', (e) => { if (e.target === calc) this.mostrar(false); });
+    container.querySelector('.calc-fechar')!.addEventListener('click', () => this.mostrar(false));
     
-    calc.querySelector('.calc-grid')!.addEventListener('click', (e) => {
+    container.querySelector('.calc-grid')!.addEventListener('click', (e) => {
       const btn = (e.target as HTMLElement).closest('button');
       if (!btn) return;
       this.processarEntrada(btn);
@@ -98,10 +95,13 @@ export class Calculadora {
   }
 
   private mostrar(exibir: boolean): void {
+    const app = document.querySelector('.app')!;
     if (exibir) {
       this.el?.classList.add('ativa');
+      app.classList.add('calc-aberta');
     } else {
       this.el?.classList.remove('ativa');
+      app.classList.remove('calc-aberta');
     }
   }
 
